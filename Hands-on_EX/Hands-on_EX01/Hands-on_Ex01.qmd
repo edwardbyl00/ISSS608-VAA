@@ -32,3 +32,4 @@ ggplot(data = exam_data,
     vjust = -0.3) +
   labs(y = "Number of Students")
 ```
+
