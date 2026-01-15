@@ -23,6 +23,12 @@ exam_data <- read_csv("data/Exam_data.csv")
 
 ```{r}
 ggplot(data = exam_data, 
-       aes(x = RACE)) +
-  geom_bar()
+       aes(x = RACE,fill=RACE)) +
+  geom_bar()+
+  scale_fill_brewer(palette = "Set2") +
+  geom_text(
+    aes(label = scales::percent(after_stat(count / sum(count)),accuracy = 0.1)),
+    stat = "count",
+    vjust = -0.3) +
+  labs(y = "Number of Students")
 ```
