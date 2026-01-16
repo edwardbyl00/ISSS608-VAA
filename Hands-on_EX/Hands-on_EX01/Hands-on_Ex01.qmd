@@ -280,5 +280,3 @@ ggplot(data=exam_data,
   coord_flip() +
   theme_minimal()
 ```
-=======
->>>>>>> 5443ec43a8dd7751a75150d57b5a0320773ec935
