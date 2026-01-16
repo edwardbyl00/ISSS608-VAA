@@ -47,7 +47,6 @@ ggplot(data = exam_data,
   labs(y = "Number of Students")
 ```
 
-<<<<<<< HEAD
 #### 1.7.2 Geometric Objects: geom_dotplot
 
 ```{r}
