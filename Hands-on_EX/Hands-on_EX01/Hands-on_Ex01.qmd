@@ -26,6 +26,7 @@ exam_data <- read_csv("data/Exam_data.csv")
 ```{r}
 ggplot(data=exam_data)
 ```
+
 #### 1.6 Essential Grammatical Elements in ggplot2: Aesthetic mappings
 
 ```{r}

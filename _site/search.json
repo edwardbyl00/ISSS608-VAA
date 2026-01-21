@@ -7,13 +7,6 @@
     "text": "Welcome to ISSS608 Visual Analytics and Applications.\nIn this website, you will find my coursework prepared for this course."
   },
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "About this site\n\n1 + 1\n\n[1] 2"
-  },
-  {
     "objectID": "Hands-on_EX/Hands-on_EX01/Hands-on_Ex01.html",
     "href": "Hands-on_EX/Hands-on_EX01/Hands-on_Ex01.html",
     "title": "Hands-on Exercise 1",
@@ -33,5 +26,47 @@
     "title": "Hands-on Exercise 1",
     "section": "",
     "text": "exam_data &lt;- read_csv(\"data/Exam_data.csv\")\n\nRows: 322 Columns: 7\n── Column specification ────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr (4): ID, CLASS, GENDER, RACE\ndbl (3): ENGLISH, MATHS, SCIENCE\n\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site\n\n1 + 1\n\n[1] 2"
+  },
+  {
+    "objectID": "Hands-on_EX/Hands-on_EX02/Hands-on_Ex02.html",
+    "href": "Hands-on_EX/Hands-on_EX02/Hands-on_Ex02.html",
+    "title": "Hands-on_EX02",
+    "section": "",
+    "text": "pacman::p_load(ggrepel, patchwork, \n               ggthemes,tidyverse,hrbrthemes)\n\n\nggrepel: an R package provides geoms for ggplot2 to repel overlapping text labels.\nggthemes: an R package provides some extra themes, geoms, and scales for ‘ggplot2’.\nhrbrthemes: an R package provides typography-centric themes and theme components for ggplot2.\npatchwork: an R package for preparing composite figure created using ggplot2.\n\n\n\n\n\nexam_data &lt;- read_csv(\"data/Exam_data.csv\")"
+  },
+  {
+    "objectID": "Hands-on_EX/Hands-on_EX02/Hands-on_Ex02.html#getting-started",
+    "href": "Hands-on_EX/Hands-on_EX02/Hands-on_Ex02.html#getting-started",
+    "title": "Hands-on_EX02",
+    "section": "",
+    "text": "pacman::p_load(ggrepel, patchwork, \n               ggthemes,tidyverse,hrbrthemes)\n\n\nggrepel: an R package provides geoms for ggplot2 to repel overlapping text labels.\nggthemes: an R package provides some extra themes, geoms, and scales for ‘ggplot2’.\nhrbrthemes: an R package provides typography-centric themes and theme components for ggplot2.\npatchwork: an R package for preparing composite figure created using ggplot2.\n\n\n\n\n\nexam_data &lt;- read_csv(\"data/Exam_data.csv\")"
+  },
+  {
+    "objectID": "Hands-on_EX/Hands-on_EX02/Hands-on_Ex02.html#beyond-ggplot2-annotation-ggrepel",
+    "href": "Hands-on_EX/Hands-on_EX02/Hands-on_Ex02.html#beyond-ggplot2-annotation-ggrepel",
+    "title": "Hands-on_EX02",
+    "section": "2.3 Beyond ggplot2 Annotation: ggrepel",
+    "text": "2.3 Beyond ggplot2 Annotation: ggrepel\n\nggplot(data=exam_data, \n       aes(x=MATHS, \n           y=ENGLISH)) +\n  geom_point() +\n  geom_smooth(method=lm, \n              linewidth=0.5,\n              formula = y ~ x) +  \n  geom_label(aes(label = ID), \n             hjust = .5, \n             vjust = -.5) +\n  coord_cartesian(xlim=c(0,100),\n                  ylim=c(0,100)) +\n  ggtitle(\"English scores versus Maths scores for Primary 3\")\n\n\n\n\n\n\n\n\n\n2.3.1 Working with ggrepel\n\nggplot(data=exam_data, \n       aes(x= MATHS, \n           y=ENGLISH)) +\n  geom_point() +\n  geom_smooth(method=lm, \n              linewidth=0.5,\n              formula = y ~ x) +  \n  geom_label_repel(aes(label = ID), \n                   fontface = \"bold\") +\n  coord_cartesian(xlim=c(0,100),\n                  ylim=c(0,100)) +\n  ggtitle(\"English scores versus Maths scores for Primary 3\")"
+  },
+  {
+    "objectID": "Hands-on_EX/Hands-on_EX02/Hands-on_Ex02.html#beyond-ggplot2-themes",
+    "href": "Hands-on_EX/Hands-on_EX02/Hands-on_Ex02.html#beyond-ggplot2-themes",
+    "title": "Hands-on_EX02",
+    "section": "2.4 Beyond ggplot2 Themes",
+    "text": "2.4 Beyond ggplot2 Themes\n\nggplot(data=exam_data, \n             aes(x = MATHS)) +\n  geom_histogram(bins=20, \n                 boundary = 100,\n                 color=\"grey25\", \n                 fill=\"grey90\") +\n  theme_gray() +\n  ggtitle(\"Distribution of Maths scores\")\n\n\n\n\n\n\n\n\n\n2.4.1 Working with ggtheme package\n\nggplot(data=exam_data, \n             aes(x = MATHS)) +\n  geom_histogram(bins=20, \n                 boundary = 100,\n                 color=\"grey25\", \n                 fill=\"grey90\") +\n  ggtitle(\"Distribution of Maths scores\") +\n  theme_economist()\n\n\n\n\n\n\n\n\n\n\n2.4.2 Working with hrbthems package\n\nggplot(data=exam_data, \n             aes(x = MATHS)) +\n  geom_histogram(bins=20, \n                 boundary = 100,\n                 color=\"grey25\", \n                 fill=\"grey90\") +\n  ggtitle(\"Distribution of Maths scores\") +\n  theme_ipsum()\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, \n             aes(x = MATHS)) +\n  geom_histogram(bins=20, \n                 boundary = 100,\n                 color=\"grey25\", \n                 fill=\"grey90\") +\n  ggtitle(\"Distribution of Maths scores\") +\n  theme_ipsum(axis_title_size = 18,\n              base_size = 15,\n              grid = \"Y\")"
+  },
+  {
+    "objectID": "Hands-on_EX/Hands-on_EX02/Hands-on_Ex02.html#beyond-single-graph",
+    "href": "Hands-on_EX/Hands-on_EX02/Hands-on_Ex02.html#beyond-single-graph",
+    "title": "Hands-on_EX02",
+    "section": "2.5 Beyond Single Graph",
+    "text": "2.5 Beyond Single Graph\n\nggplot(data=exam_data, \n             aes(x = MATHS)) +\n  geom_histogram(bins=20,\n                 boundary = 100,\n                 color=\"grey25\",\n                 fill=\"grey90\") +\n  coord_cartesian(xlim=c(0,100)) +\n  ggtitle(\"Distribution of Maths scores\")\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, \n             aes(x = ENGLISH)) +\n  geom_histogram(bins=20, \n                 boundary = 100,\n                 color=\"grey25\", \n                 fill=\"grey90\") +\n  coord_cartesian(xlim=c(0,100)) +\n  ggtitle(\"Distribution of English scores\")\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, \n             aes(x= MATHS, \n                 y=ENGLISH)) +\n  geom_point() +\n  geom_smooth(method=lm, \n              linewidth=0.5,\n              formula = y ~ x) +  \n  coord_cartesian(xlim=c(0,100),\n                  ylim=c(0,100)) +\n  ggtitle(\"English scores versus Maths scores for Primary 3\")\n\n\n\n\n\n\n\n\n\n2.5.1 Creating Composite Graphics: patchwork methods\n\n\n2.5.2 Combining two ggplot2 graphs\nTo combine separate ggplot2 graphs into a single figure.\n\np1 + p2\n\n\n\n\n\n\n\n\n\n\n2.5.3 Combining three ggplot2 graphs\n\n“/” operator to stack two ggplot2 graphs,\n“|” operator to place the plots beside each other,\n“()” operator the define the sequence of the plotting.\n\n\n(p1 / p2) | p3\n\n\n\n\n\n\n\n\n\n\n2.5.4 Creating a composite figure with tag\n\n((p1 / p2) | p3) + \n  plot_annotation(tag_levels = 'I')\n\n\n\n\n\n\n\n\n\n\n2.5.5 Creating figure with insert\n\np3 + inset_element(p2, \n                   left = 0.02, \n                   bottom = 0.7, \n                   right = 0.5, \n                   top = 1)\n\n\n\n\n\n\n\n\n\n\n2.5.6 Creating a composite figure by using patchwork and ggtheme\n\npatchwork &lt;- (p1 / p2) | p3\npatchwork & theme_economist()+\n  theme(plot.title = element_text(size = 12))"
   }
 ]
