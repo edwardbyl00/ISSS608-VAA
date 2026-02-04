@@ -340,4 +340,3 @@ crosstalk::bscols(gg,
                   DT::datatable(d), 
                   widths = 5)                                              
 ```
-
