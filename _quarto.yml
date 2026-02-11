@@ -11,10 +11,12 @@ website:
           href: "Hands-on_EX/Hands-on_EX01/Hands-on_EX01.html"
         - text: "Hands-on Exercise 2"
           href: "Hands-on_EX/Hands-on_EX02/Hands-on_EX02.html"
+
         - text: "Hands-on Exercise 3a"
           href: "Hands-on_EX/Hands-on_EX03/Hands-on_EX03a.html"
         - text: "Hands-on Exercise 3b"
           href: "Hands-on_EX/Hands-on_EX03/Hands-on_EX03b.html"
+
         - text: "Hands-on Exercise 4a"
           href: "Hands-on_EX/Hands-on_EX04/Hands-on_EX04a.html"
         - text: "Hands-on Exercise 4b"
@@ -23,6 +25,23 @@ website:
           href: "Hands-on_EX/Hands-on_EX04/Hands-on_EX04c.html"
         - text: "Hands-on Exercise 4d"
           href: "Hands-on_EX/Hands-on_EX04/Hands-on_EX04d.html"
+
+        - text: "Hands-on Exercise 5a"
+          href: "Hands-on_EX/Hands-on_EX05/Hands-on_EX05a.html"
+        - text: "Hands-on Exercise 5b"
+          href: "Hands-on_EX/Hands-on_EX05/Hands-on_EX05b.html"
+        - text: "Hands-on Exercise 5c"
+          href: "Hands-on_EX/Hands-on_EX05/Hands-on_EX05c.html"
+        - text: "Hands-on Exercise 5d"
+          href: "Hands-on_EX/Hands-on_EX05/Hands-on_EX05d.html"
+        - text: "Hands-on Exercise 5e"
+          href: "Hands-on_EX/Hands-on_EX05/Hands-on_EX05e.html"
+          
+    - text: "Take-home Exercise"
+      menu:
+        - text: "Take-home Exercise 1"
+          href: "Take-home_EX/Take-home_EX01/Take-home_EX01.html"
+          
     right:
       -  href: index.qmd
          text: Home
