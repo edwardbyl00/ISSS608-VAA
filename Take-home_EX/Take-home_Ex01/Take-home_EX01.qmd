@@ -1,27 +1,41 @@
 ---
-title: "Take-home_EX01 Draft"
+title: "Take-home_EX01"
 author: "Edward"
 ---
 
 ## 1 Introduction
 
+The dataset established by Tran, Nguyen, and Le (2025) collects comprehensive data on students and alumni from the VNU University of Education to identify the internal and external factors that drive academic success. Similar to international assessments, it captures contextual information on student demographics, family socioeconomic status, and institutional factors such as lecturer quality and university facilities. This study provides a rigorous framework for understanding how student learning outcomes, measured by Grade Point Average (GPA), are influenced by the evolving demands of the digital age.
+
+The results from this dataset offer significant insights into the equity and quality of education within the Vietnamese context, allowing educational administrators and policy makers to benchmark performance against global standards. The goal of this research is to shift the focus toward proactive intervention, enabling lecturers and academic advisors to use data-driven insights to improve student motivation and performance. By establishing shared points of reference regarding peer influence, teaching methods, and school support, the dataset encourages a shift from traditional internal reviews to an outward-looking, evidence-based approach to educational management.
+
+The survey was conducted in 2023 and involved a robust sample of 2,170 validated responses from both current students and graduated alumni, providing a longitudinal perspective on the factors affecting learning outcomes.
+
 ## 2 Getting Started
 
-#### 2.1 Setting the Analytical Tools
+### 2.1 Setting the Analytical Tools
 
--   skimr: Provides a frictionless approach to summary statistics which conforms to the principle of least surprise, displaying summary statistics the user can skim quickly to understand their data.
+-   `readxl:` To enable the loading of Excel xls file into R environment.
+
+-   `skimr`: Provides a frictionless approach to summary statistics which conforms to the principle of least surprise, displaying summary statistics the user can skim quickly to understand their data.
+
+-   `patchwork`: An R package for preparing composit figure created using ggplot2.
+
+-   `ggridges`: a ggplot extension specially designed for plotting ridgeline plots.
 
 ```{r}
-pacman::p_load(readxl,skimr,tidyverse,ggthemes,
-               hrbrthemes,patchwork,reshape2,ggridges, 
-               ggdist,ggstatsplot,ggpubr,ggiraph,likert)
+pacman::p_load(readxl,skimr,tidyverse,patchwork,ggridges)
 ```
 
-#### 2.2 Data Sources
+### 2.2 Data Sources
+
+Dataset of factors affecting learning outcomes of students at the University of Education, Vietnam National University, Hanoi:
+
+<https://www.sciencedirect.com/science/article/pii/S2352340925001702>
 
 ## 3 Data Preparation
 
-#### 3.1 Data Import
+### 3.1 Data Import
 
 We first load in the dataset and name it student.
 
@@ -30,36 +44,53 @@ student <- read_xlsx("Data/Database paper.xlsx",
                       sheet="Sheet1")
 ```
 
-#### 3.2 Data Sanity Checks
+### 3.2 Data Sanity Checks
 
-We run a quick sanity checks to identify potential abnormal data as well as missing values using skimr. This is also good to understand the data distribution at a glance.
+Using `skimr`, we screened for missing data and abnormalities to quickly assess the overall data distribution.
+
+There is no missing values observed.
+
+### 3.3 High-level observations:
+
+-   The survey was predominantly conducted among **graduated** students.
+
+-   The majority of respondents were **female**.
+
+-   Only a minority of students were on **government policy support**.
+
+-   Most students reported spending **over eight hours per day studying**.
+
+-   The majority of students’ GPA levels fall within the range of **Average (2) to Good (4)**.
+
+-   Most students reported at least **moderate levels of support from both the university and lecturers**.
+
+-   A large proportion of respondents indicated that **peer influence and classroom competitiveness** have a noticeable impact on their academic performance.
 
 ```{r}
 skimr::skim(student)
 ```
 
-Now we take a look at some of the data sample and also to ensure the data type are set correctly.
+### 3.4 Data Types Conversion
+
+1.  Now we take a look at some of the data sample using `glimpse` and also to ensure the data type are set correctly.
 
 ```{r}
 glimpse(student)
 ```
 
-We will proceed to rename some column with typo names and change the data type accordingly:
+2.  We will proceed to rename some column with typo names.
 
 ```{r}
 #| code-fold: true
 student <- student %>%
   
     rename(
-    
     Time_SocialMedia = any_of('Time_SocicalMedia'),
     InfluenceOF_Friends = any_of('InfuenceF_Friends')
-    
     )
-
 ```
 
-The data variable is then re-labeled to bring in context:
+3.  The data type and variable is then changed and re-labeled to bring in context:
 
 ```{r}
 #| code-fold: true
@@ -69,7 +100,7 @@ student <- student %>%
     Year = factor(
       Year,
       levels = 3:5,
-      labels = c("3rd Year", "4th Year", "Graduated"),
+      labels = c("Third-year", "Fourth-year", "Graduated"),
       ordered = TRUE),
     
     Gender = factor(Gender,
@@ -91,10 +122,16 @@ student <- student %>%
         
     GPA = factor(GPA,
       levels = 1:5,
-      labels = c("Poor","Average","Fair","Good","Excellent"),
+      labels = c("Under 2.0 – Poor","2.0 to lower 2.5 – Average","2.5 to lower 3.2 – Fair",
+                 "3.2 to lower 3.6 – Good","Over 3.6 – Excellent"),
       ordered = TRUE),
     
     GPA_value = as.numeric(GPA),
+    
+    Time_Studying = factor(Time_Studying,
+      levels = 1:5,
+      labels = c("under 2 hours","2 to lower 4 hours","4 to lower 6 hours","6 to lower 8 hours","over 8 hours"),
+      ordered = TRUE),
 
     
     across(c(Father_Edu, Mother_Edu),
@@ -108,11 +145,28 @@ student <- student %>%
               "Graduate",
               "Not Public"),
             ordered = TRUE)),
+        
+        
+    across(c(Father_Occupation, Mother_Occupation),
+    ~factor(.x,
+            levels = 1:5,
+            labels = c(
+              "Government employee",
+              "Self-employment",
+              "Freelance",
+              "Other",
+              "Not Public"),
+            ordered = FALSE)),
+    
+    across(c(Time_Friends, Time_SocialMedia),
+    ~ factor(.x,
+             levels = 1:5,
+             labels = c("under 1 hour","1 to lower 2 hours","from 2 to lower 3 hours","from 3 to lower 4 hours","over 4 hours"),
+             ordered = TRUE)),
             
-    across(c(Time_Friends, Time_SocialMedia, Time_Studying,
-      Adapt_Learning_Uni, Study_Methods, SupportOf_Uni,
+    across(c(Adapt_Learning_Uni, Study_Methods, SupportOf_Uni,
       SupportOf_Lec, Facilitie_Uni, Quality_Lecturer,
-      TrainingCurriculum, InfluenceOF_Friends),
+      TrainingCurriculum, InfluenceOF_Friends,Competitive_Class),
     ~ factor(.x,
              levels = 1:5,
              labels = c("Not at all","Little","Moderate","Quite","Very"),
@@ -121,30 +175,155 @@ student <- student %>%
 
 ```
 
+4.  Finally a final check is done to ensure the data are prepared accordingly.
+
 ```{r}
+#| code-fold: true
 glimpse(student)
 skimr::skim(student)
 ```
 
-#### 3.3 Filters
+### 3.3 Calculations and Filters
 
-#### 3.4 Feature Selection
+#### 3.3.1 Cumulative count % across GPA order
+
+```{r}
+gpa_cum <- student %>%
+  count(GPA) %>%
+  arrange(GPA) %>%
+  mutate(
+    pct = n / sum(n),
+    cum_pct = cumsum(pct)
+  )
+```
+
+#### 3.3.2 Count % of GPA across Gender Demographic
+
+```{r}
+gpa_pct <- student %>%
+  count(Gender, GPA) %>%
+  group_by(Gender) %>%
+  mutate(pct = n / sum(n))
+```
+
+#### 3.3.3 Filtered view for parents' educational level
+
+Filter to only include observations where both mother’s and father’s education levels were reported.
+
+GPA categories were grouped into two performance levels:
+
+-   **Good or above**: Good and Excellent
+
+-   **Below Good**: Poor, Average, and Fair
+
+```{r}
+student_parent_edu <- student %>%
+  filter(Mother_Edu != "Not Public",
+         Father_Edu != "Not Public") %>%
+  mutate(
+    High_Performance = ifelse(GPA %in% c("3.2 to lower 3.6 – Good", "Over 3.6 – Excellent"),
+                              "Good or above",
+                              "Below Good"),
+    High_Performance = factor(High_Performance,
+                              levels = c("Below Good", "Good or above"))
+  )
+```
+
+#### 3.3.4 Grouping of GPA
+
+Similar to above (3.3.3) except that there is no filter applied.
+
+GPA categories were grouped into two performance levels:
+
+-   **Good or above**: Good and Excellent
+
+-   **Below Good**: Poor, Average, and Fair
+
+```{r}
+
+student_gpa <- student %>%
+  mutate(
+    High_Performance = ifelse(GPA %in% c("3.2 to lower 3.6 – Good", "Over 3.6 – Excellent"),
+                              "Good or above",
+                              "Below Good"),
+    High_Performance = factor(High_Performance,
+                              levels = c("Below Good", "Good or above"))
+  )
+```
+
+#### 3.3.5 Filter for Support of Lecturer
+
+Base on above filtered view (3.3.4), we limit the scope to where the support from lecturer is zero.
+
+```{r}
+student_gpa1 <- student_gpa %>%
+filter(SupportOf_Lec == "Not at all")
+```
 
 ## 4 Exploratory Data Analysis
 
 #### Observation 1:
 
-A 5% gap was observed in top academic performance: 37% of female students achieved a 'Good' or above GPA, compared to \~32% of male students.
+-   Most respondents have GPA 2.5 (Fair) or higher.
+
+-   Students with GPA performance at the Average level or below account for only 8.4% of the sample.
+
+```{r, fig.height=7}
+#| code-fold: true
+#| warning: false
+ggplot(gpa_cum, aes(x = GPA)) +
+  geom_col(aes(y = n, fill = "Count")) +
+
+  geom_line(
+    aes(y = cum_pct * max(n), colour = "Cumulative %", group = 1,),
+    linewidth = 0.7
+  ) +
+
+  geom_point(
+    aes(y = cum_pct * max(n), colour = "Cumulative %"),
+    linewidth = 2
+  ) +
+
+  geom_text(
+    aes(
+      y = cum_pct * max(n),
+      label = scales::percent(cum_pct, accuracy = 0.1)
+    ),
+    vjust = -0.8,
+    colour = "Black",
+    linewidth = 3
+  ) +
+
+  scale_fill_manual(
+    values = c("Count" = "#B3CDE3"),
+    name = ""
+  ) +
+
+  scale_colour_manual(
+    values = c("Cumulative %" = "Black"),
+    name = ""
+  ) +
+
+  labs(
+    title = "GPA Distribution with Cumulative Percentage",
+    x = "GPA Category",
+    y = "Number of Students"
+  ) +
+  
+  theme_minimal()+ 
+  
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)
+)
+
+```
+
+#### Observation 2:
+
+Aproximately 5% gap in top academic performance (GPA 3.2 and above) is observed, with **37% of female students attaining above 3.2 GPA (Good)** compared to about 32% of male students.
 
 ```{r}
 #| code-fold: true
-
-gpa_pct <- student %>%
-  count(Gender, GPA) %>%
-  group_by(Gender) %>%
-  mutate(pct = n / sum(n))
-
-
 gpa <- ggplot(gpa_pct, aes(x = Gender, y = pct, fill = GPA)) +
   geom_col() +
   geom_text(
@@ -165,150 +344,276 @@ gpa
 
 ```
 
-#### Observation 2:
-
-Students with parent educated to a college level or higher are more likely to achieve a GPA of "Good" or above. While both parents' educational backgrounds correlate positively with student performance, the relationship is notably stronger with the mother's education level.
-
-```{r}
-#| code-fold: true
-father_edu <-ggplot(student, aes(Father_Edu, fill = GPA)) +
-  geom_bar(position = "fill") +
-  coord_flip() +
-  scale_y_continuous(labels = scales::percent) +
-  labs(
-    x = "Father's Education",
-    y = "Percentage",
-    fill = "GPA"
-  )+
-  scale_fill_brewer(palette = "Pastel1")+
-  labs(
-    title = "GPA Distribution by Father's Education",
-    x = "Father's Education",
-    y = "Percentage",
-    fill = "GPA"
-  ) 
-
-mom_edu <-ggplot(student, aes(Mother_Edu, fill = GPA)) +
-  geom_bar(position = "fill") +
-  coord_flip() +
-  scale_y_continuous(labels = scales::percent) +
-  labs(
-    x = "Mothers's Education",
-    y = "Percentage",
-    fill = "GPA"
-  )+
-  scale_fill_brewer(palette = "Pastel1")+
-  labs(
-    title = "GPA Distribution by Mothers's Education",
-    x = "Mothers's Education",
-    y = "Percentage",
-    fill = "GPA"
-  ) 
-
-(mom_edu / father_edu)
-```
-
 #### Observation 3:
 
-It was noted that there are some abnormilty with the follow feature where we are seeing a higher proportion of Student getting a Good or Excellent grade as compare to having better rating on :
+The plot below illustrates how the percentage of students achieving a GPA classified as Good or above **increases with higher levels of parental education**, for both fathers and mothers.
 
--   Quality of Lecturer
-
--   Support from lecturers
-
--   Influence of friends
-
--   Study methods
+For each parental education level, the percentage of students (pct) in the newly defined performance group was calculated relative to the total number of students within that education category. This allows comparison of high academic performance across different parental education levels.
 
 ```{r}
 #| code-fold: true
-method <- ggplot(student, aes(x = Study_Methods, fill = GPA)) +
+
+mom_plot <- student_parent_edu %>%
+  count(Mother_Edu, High_Performance) %>%
+  group_by(Mother_Edu) %>%
+  mutate(pct = n / sum(n)) %>%
+  filter(High_Performance == "Good or above") %>%
+  ggplot(aes(x = Mother_Edu, y = pct)) +
+  geom_col(fill = "#FBB4AE") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "Proportion of High GPA by Mother's Education",
+    x = "Mother's Education",
+    y = "Percentage of High Performers (Above 3.2)"
+  ) +
+  geom_text(
+  aes(label = scales::percent(pct, accuracy = 0.1)),
+  hjust = 1.1,
+  size = 3)+
+  theme_minimal()
+
+father_plot <- student_parent_edu %>%
+  count(Father_Edu, High_Performance) %>%
+  group_by(Father_Edu) %>%
+  mutate(pct = n / sum(n)) %>%
+  filter(High_Performance == "Good or above") %>%
+  ggplot(aes(x = Father_Edu, y = pct)) +
+  geom_col(fill = "#B3CDE3") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "Proportion of High GPA by Father's Education",
+    x = "Father's Education",
+    y = "Percentage of High Performers (Above 3.2)"
+  )+
+  geom_text(
+  aes(label = scales::percent(pct, accuracy = 0.1)),
+  hjust = 1.1,
+  size = 3
+) +
+  theme_minimal()
+
+mom_plot / father_plot
+```
+
+#### Observation 4:
+
+Looking at the student individual trait on the below, we noted that student that scored **over 3.6 GPA (Excellent)**:
+
+-   Spent **at least 4 hours studying** on average per day
+
+-   Report at least a **little and above effectiveness** of studying methods
+
+Not much observation on the GPA are seen against learning adaptation and time spent on social media
+
+```{r,fig.width=15, fig.height=8}
+#| code-fold: true
+#| message: false
+
+method <- ggplot(student,
+       aes(x = GPA_value, y = Study_Methods, fill = GPA)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.1) +
+  theme_minimal()+ 
+  scale_fill_brewer(palette = "Pastel1")
+
+time <- ggplot(student,
+       aes(x = GPA_value, y = Time_Studying, fill = GPA)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.1) +
+  theme_minimal()+ 
+  scale_fill_brewer(palette = "Pastel1")
+
+adapt <- ggplot(student,
+       aes(x = GPA_value, y = Adapt_Learning_Uni, fill = GPA)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.1) +
+  theme_minimal()+ 
+  scale_fill_brewer(palette = "Pastel1")
+
+social <- ggplot(student,
+       aes(x = GPA_value, y = Time_SocialMedia, fill = GPA)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.1) +
+  theme_minimal()+ 
+  scale_fill_brewer(palette = "Pastel1")
+
+(time|method)/(adapt|social)+ 
+  plot_annotation(title = "Grades performance based on student individual attributes")
+
+
+```
+
+#### Observation 5:
+
+From the perspective of university-driven factors, several noteworthy patterns emerge. Approximately half of the students achieved a GPA of **3.2 (Good) or above** despite reporting the **lowest levels of lecturer quality and support**, particularly in relation to lecturer support.
+
+When some level of lecturer support is present, a higher proportion of students attain a GPA of 3.2 or above, particularly within the “Little” to “Quite” support categories. This suggests a **moderate positive association between lecturer support and academic performance**.
+
+In contrast, perceived university support and the quality of the training curriculum display mixed results, with **no clear or consistent trend** observed in relation to GPA performance.
+
+```{r}
+#| code-fold: true
+
+
+Support_uni <- ggplot(student_gpa, aes(x = SupportOf_Uni, fill = High_Performance)) +
   geom_bar(position = "fill") +
   scale_fill_brewer(palette = "Pastel1")+
   scale_y_continuous(labels = scales::percent) +
-  theme_minimal()
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
-Support_lec <- ggplot(student, aes(x = SupportOf_Lec, fill = GPA)) +
+Support_lec <- ggplot(student_gpa, aes(x = SupportOf_Lec, fill = High_Performance)) +
   geom_bar(position = "fill") +
   scale_fill_brewer(palette = "Pastel1") +
   scale_y_continuous(labels = scales::percent)+
-  theme_minimal()
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
-quality <- ggplot(student, aes(x = Quality_Lecturer, fill = GPA)) +
+quality <- ggplot(student_gpa, aes(x = Quality_Lecturer, fill = High_Performance)) +
   geom_bar(position = "fill") +
   scale_fill_brewer(palette = "Pastel1") +
   scale_y_continuous(labels = scales::percent)+
-  theme_minimal()
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
-friend <- ggplot(student, aes(x = InfluenceOF_Friends, fill = GPA)) +
+Curriculum <- ggplot(student_gpa, aes(x = TrainingCurriculum, fill = High_Performance)) +
   geom_bar(position = "fill") +
   scale_fill_brewer(palette = "Pastel1")+
   scale_y_continuous(labels = scales::percent) +
-  theme_minimal()
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
-(quality / Support_lec) | (method/friend)
+(Support_lec | quality) / (Support_uni|Curriculum)+ 
+  plot_annotation(title = "Grades performance based on Lecturer and School attributes")
 ```
+
+#### Observation 6:
+
+Focusing on the subgroup of students who reported no support from lecturers, the following observations were identified:
+
+**Time_studying:**
+
+-   Among students without lecturer support, achieving a GPA of Good or above appears to require studying at least eight hours per day on average.
+
+-   Students studying fewer hours tend to fall below the Good GPA category.
+
+**Study_method:**
+
+-   Perceived effectiveness of study methods aligns positively with GPA performance.
+
+-   Students who rated their study methods as Moderate or higher predominantly attained Good or above results.
+
+**Adapt_Learning_Uni:**
+
+-   Adaptation level shows a generally positive association with GPA performance.
+
+-   However, students within the “Quite” adaptation category were observed to fall below the Good GPA level, indicating a deviation from the overall pattern.
+
+**Time_SocialMedia:**
+
+-   Interestingly, time spent on social media appears to be positively associated with GPA performance when usage is below four hours per day.
+
+-   The dataset does not differentiate between academic and non-academic use and further investigation would be required to better understand the mechanisms underlying these patterns.
 
 ```{r}
 #| code-fold: true
-no_suport_lec <- student %>%
-  filter(SupportOf_Lec =='Not at all')
 
-ggplot(no_suport_lec, aes(Time_Studying, fill = GPA)) +
-  geom_bar()+
-  scale_fill_brewer(palette = "Pastel1")
+low_sup_time <- ggplot(student_gpa1, aes(x = Time_Studying, fill = High_Performance)) +
+  geom_bar(position = "fill") +
+  scale_fill_brewer(palette = "Pastel1")+
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+low_sup_methods <- ggplot(student_gpa1, aes(x = Study_Methods, fill = High_Performance)) +
+  geom_bar(position = "fill") +
+  scale_fill_brewer(palette = "Pastel1")+
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+low_sup_adaptation <- ggplot(student_gpa1, aes(x = Adapt_Learning_Uni, fill = High_Performance)) +
+  geom_bar(position = "fill") +
+  scale_fill_brewer(palette = "Pastel1")+
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+low_sup_social <- ggplot(student_gpa1, aes(x = Time_SocialMedia, fill = High_Performance)) +
+  geom_bar(position = "fill") +
+  scale_fill_brewer(palette = "Pastel1")+
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+(low_sup_time | low_sup_methods) / (low_sup_adaptation | low_sup_social)+ 
+  plot_annotation(title = "Grades performance based on School attributes without Lecturers support")
 ```
 
-```{r}
-#| code-fold: true
-ggplot(student, aes(x = GPA_value, y = Time_Studying, fill = Study_Methods)) +
-  geom_density_ridges(
-    alpha = 0.6,
-    scale = 1.2,
-    rel_min_height = 0.01
-  ) +
-  scale_x_continuous(
-    breaks = 1:5,
-    labels = c("Poor", "Average", "Fair", "Good", "Excellent")
-  ) +
-  labs(
-    title = "Distribution of GPA by Time_Studying",
-    x = "GPA",
-    y = "Time_Studying"
-  ) +
-  theme_minimal() +
-  scale_fill_brewer(palette = "Pastel1")
+## 5 Summary
 
-```
+This analysis is based on a selected survey sample and may not fully represent the broader student population. As such, the findings should be interpreted with caution due to potential sampling bias. In addition, the reliance on Likert-scale measures introduces subjectivity, as responses may reflect individual biasness. Variables such as adaptation to university learning, study methods, and perceived lecturer quality may therefore be influenced by personal interpretation.
 
-```{r}
-#| code-fold: true
-ggplot(student, aes(x = GPA_value, y = Study_Methods, fill = Quality_Lecturer)) +
-  geom_density_ridges(
-    alpha = 0.6,
-    scale = 1.2,
-    rel_min_height = 0.0
-  ) +
-  scale_x_continuous(
-    breaks = 1:5,
-    labels = c("Poor", "Average", "Fair", "Good", "Excellent")
-  ) +
-  labs(
-    title = "Distribution of GPA by Study Methods",
-    x = "GPA",
-    y = "Study Methods"
-  ) +
-  theme_minimal() +
-  scale_fill_brewer(palette = "Pastel1")
+Among the factors examined, parental education and time spent studying demonstrate the most consistent positive associations with higher GPA. **Institutional factors**, including university support and training curriculum, show comparatively weaker and less consistent relationships. Interestingly, some high-performing students report minimal lecturer support, which may indicate stronger intrinsic motivation or greater independent learning capability rather than an absence of institutional influence.
 
+Overall, the observed association between parental education and academic performance highlights the potential influence of family socioeconomic background on student outcomes.
 
+### 5.1 Key Findings
 
-```
+-   Most respondents achieved a GPA of 2.5 (Fair) or higher.
 
-## 5 Conclusion
+-   Female students were observed to have a higher proportion of GPAs at 3.2 (Good) or above. However, this difference should be interpreted cautiously, as the survey sample consisted predominantly of female respondents.
 
-#### References
+-   Parental education appears to be associated with students’ academic performance. Higher parental educational attainment is linked to a greater likelihood of achieving higher GPAs, with the association appearing stronger for mothers, particularly at the graduate level.
 
-<https://forcats.tidyverse.org/>
+-   A positive relationship is observed between time spent studying and GPA, suggesting that greater study time is associated with improved academic outcomes.
 
-<https://ggplot2.tidyverse.org/articles/ggplot2.html>
+-   The relationship between time spent on social media and GPA is mixed. This may indicate that moderate social media use does not necessarily hinder performance and could potentially serve as a supplementary learning resource.
+
+-   In cases where lecturer support was absent, the results are less consistent.
+
+    -   Students reporting minimal support tended to show stronger GPA outcomes.
+
+    -   Interestingly, students reporting no lecturer support exhibited the highest proportion of GPAs at 3.2 or above across support levels.
+
+    -   Further examination suggests that longer study time, more effective study methods, and patterns of social media use may compensate for limited lecturer support in achieving higher academic performance.
+
+### 5.2 Recommendation for Future Work
+
+-   Further investigation is needed to better understand the extent of parental engagement in students’ education, as educational attainment alone may not fully reflect the level of involvement or support provided at home.
+
+-   In addition, examining the specific purposes of social media use (i.e for entertainment, communication, or academic learning) would allow for a more accurate interpretation of its relationship with academic performance.
+
+-   As the current analysis is largely descriptive, additional statistical tests could be conducted to formally statitically support the observed relationships.
+
+-   The observation that students reporting no lecturer support nonetheless perform well warrants further examination. This may help clarify whether individual independence or self-directed learning plays a significant role in academic achievement.
+
+## 6 References and Inspiration
+
+-   *Kam, Tin Seong. (2025).1  A Layered Grammar of Graphics: ggplot2 methods – R for Visual Analytics*. (2023, December 4). Netlify.app. <https://r4va.netlify.app/chap01>
+
+-   *Kam, Tin Seong. (2025).9  Visualising Distribution – R for Visual Analytics*. (2023, April 12). Netlify.app. <https://r4va.netlify.app/chap09>
+
+-   *Tools for Working with Categorical Variables (Factors)*. (n.d.). Forcats.tidyverse.org. <https://forcats.tidyverse.org/>
+
+-   ggplot2. (2024). *Introduction to ggplot2*. Tidyverse.org. <https://ggplot2.tidyverse.org/articles/ggplot2.html>
+
+-   ‌Hehman, E., & Xie, S. Y. (2021). Doing Better Data Visualization. *Advances in Methods and Practices in Psychological Science*, *4*(4), 251524592110453. <https://doi.org/10.1177/25152459211045334>
+
+‌
+
+‌

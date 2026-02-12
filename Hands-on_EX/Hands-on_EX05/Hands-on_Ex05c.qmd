@@ -1,7 +1,7 @@
 # **14  Heatmap for Visualising and Analysing Multivariate Data**
 
 ---
-title: "Hands-on_EX04c"
+title: "Hands-on_EX05c"
 author: "Edward"
 ---
 
