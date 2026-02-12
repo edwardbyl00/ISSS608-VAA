@@ -183,9 +183,9 @@ glimpse(student)
 skimr::skim(student)
 ```
 
-### 3.3 Calculations and Filters
+### 3.4 Calculations and Filters
 
-#### 3.3.1 Cumulative count % across GPA order
+#### 3.4.1 Cumulative count % across GPA order
 
 ```{r}
 gpa_cum <- student %>%
@@ -197,7 +197,7 @@ gpa_cum <- student %>%
   )
 ```
 
-#### 3.3.2 Count % of GPA across Gender Demographic
+#### 3.4.2 Count % of GPA across Gender Demographic
 
 ```{r}
 gpa_pct <- student %>%
@@ -206,7 +206,7 @@ gpa_pct <- student %>%
   mutate(pct = n / sum(n))
 ```
 
-#### 3.3.3 Filtered view for parents' educational level
+#### 3.4.3 Filtered view for parents' educational level
 
 Filter to only include observations where both mother’s and father’s education levels were reported.
 
@@ -229,7 +229,7 @@ student_parent_edu <- student %>%
   )
 ```
 
-#### 3.3.4 Grouping of GPA
+#### 3.4.4 Grouping of GPA
 
 Similar to above (3.3.3) except that there is no filter applied.
 
@@ -251,7 +251,7 @@ student_gpa <- student %>%
   )
 ```
 
-#### 3.3.5 Filter for Support of Lecturer
+#### 3.4.5 Filter for Support of Lecturer
 
 Base on above filtered view (3.3.4), we limit the scope to where the support from lecturer is zero.
 

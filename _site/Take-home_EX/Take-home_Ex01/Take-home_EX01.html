@@ -236,7 +236,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#data-sanity-checks" id="toc-data-sanity-checks" class="nav-link" data-scroll-target="#data-sanity-checks">3.2 Data Sanity Checks</a></li>
   <li><a href="#high-level-observations" id="toc-high-level-observations" class="nav-link" data-scroll-target="#high-level-observations">3.3 High-level observations:</a></li>
   <li><a href="#data-types-conversion" id="toc-data-types-conversion" class="nav-link" data-scroll-target="#data-types-conversion">3.4 Data Types Conversion</a></li>
-  <li><a href="#calculations-and-filters" id="toc-calculations-and-filters" class="nav-link" data-scroll-target="#calculations-and-filters">3.3 Calculations and Filters</a></li>
+  <li><a href="#calculations-and-filters" id="toc-calculations-and-filters" class="nav-link" data-scroll-target="#calculations-and-filters">3.4 Calculations and Filters</a></li>
   </ul></li>
   <li><a href="#exploratory-data-analysis" id="toc-exploratory-data-analysis" class="nav-link" data-scroll-target="#exploratory-data-analysis">4 Exploratory Data Analysis</a></li>
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">5 Summary</a>
@@ -1154,9 +1154,9 @@ $ GPA_value           &lt;dbl&gt; 4, 3, 4, 4, 4, 4, 3, 5, 5, 3, 3, 4, 4, 3, 5, 4
 </div>
 </section>
 <section id="calculations-and-filters" class="level3">
-<h3 class="anchored" data-anchor-id="calculations-and-filters">3.3 Calculations and Filters</h3>
+<h3 class="anchored" data-anchor-id="calculations-and-filters">3.4 Calculations and Filters</h3>
 <section id="cumulative-count-across-gpa-order" class="level4">
-<h4 class="anchored" data-anchor-id="cumulative-count-across-gpa-order">3.3.1 Cumulative count % across GPA order</h4>
+<h4 class="anchored" data-anchor-id="cumulative-count-across-gpa-order">3.4.1 Cumulative count % across GPA order</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>gpa_cum <span class="ot">&lt;-</span> student <span class="sc">%&gt;%</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(GPA) <span class="sc">%&gt;%</span></span>
@@ -1168,7 +1168,7 @@ $ GPA_value           &lt;dbl&gt; 4, 3, 4, 4, 4, 4, 3, 5, 5, 3, 3, 4, 4, 3, 5, 4
 </div>
 </section>
 <section id="count-of-gpa-across-gender-demographic" class="level4">
-<h4 class="anchored" data-anchor-id="count-of-gpa-across-gender-demographic">3.3.2 Count % of GPA across Gender Demographic</h4>
+<h4 class="anchored" data-anchor-id="count-of-gpa-across-gender-demographic">3.4.2 Count % of GPA across Gender Demographic</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>gpa_pct <span class="ot">&lt;-</span> student <span class="sc">%&gt;%</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Gender, GPA) <span class="sc">%&gt;%</span></span>
@@ -1177,7 +1177,7 @@ $ GPA_value           &lt;dbl&gt; 4, 3, 4, 4, 4, 4, 3, 5, 5, 3, 3, 4, 4, 3, 5, 4
 </div>
 </section>
 <section id="filtered-view-for-parents-educational-level" class="level4">
-<h4 class="anchored" data-anchor-id="filtered-view-for-parents-educational-level">3.3.3 Filtered view for parents’ educational level</h4>
+<h4 class="anchored" data-anchor-id="filtered-view-for-parents-educational-level">3.4.3 Filtered view for parents’ educational level</h4>
 <p>Filter to only include observations where both mother’s and father’s education levels were reported.</p>
 <p>GPA categories were grouped into two performance levels:</p>
 <ul>
@@ -1198,7 +1198,7 @@ $ GPA_value           &lt;dbl&gt; 4, 3, 4, 4, 4, 4, 3, 5, 5, 3, 3, 4, 4, 3, 5, 4
 </div>
 </section>
 <section id="grouping-of-gpa" class="level4">
-<h4 class="anchored" data-anchor-id="grouping-of-gpa">3.3.4 Grouping of GPA</h4>
+<h4 class="anchored" data-anchor-id="grouping-of-gpa">3.4.4 Grouping of GPA</h4>
 <p>Similar to above (3.3.3) except that there is no filter applied.</p>
 <p>GPA categories were grouped into two performance levels:</p>
 <ul>
@@ -1217,7 +1217,7 @@ $ GPA_value           &lt;dbl&gt; 4, 3, 4, 4, 4, 4, 3, 5, 5, 3, 3, 4, 4, 3, 5, 4
 </div>
 </section>
 <section id="filter-for-support-of-lecturer" class="level4">
-<h4 class="anchored" data-anchor-id="filter-for-support-of-lecturer">3.3.5 Filter for Support of Lecturer</h4>
+<h4 class="anchored" data-anchor-id="filter-for-support-of-lecturer">3.4.5 Filter for Support of Lecturer</h4>
 <p>Base on above filtered view (3.3.4), we limit the scope to where the support from lecturer is zero.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>student_gpa1 <span class="ot">&lt;-</span> student_gpa <span class="sc">%&gt;%</span></span>
