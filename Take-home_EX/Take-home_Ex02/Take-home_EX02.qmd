@@ -43,7 +43,6 @@ pacman::p_load(tidyverse, cluster , GGally, corrplot, patchwork, knitr)
 
 ```{r}
 customer <- read_csv('Data/customer_data.csv')
-
 skimr::skim(customer)
 ```
 
