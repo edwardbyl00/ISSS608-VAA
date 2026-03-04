@@ -39,6 +39,14 @@ pacman::p_load(tidyverse, cluster , GGally, corrplot, patchwork, knitr)
 
 # 2. The Data
 
+This analysis uses the **COFINFAD** dataset which is a comprehensive 2023 record of Colombian fintech activity.
+
+The data set contains 2 files and only the **customer_data.csv** is used.
+
+**K-means clustering** is applied to identify the distinct user profiles to optimize retention and product targeting.
+
+<https://doi.org/10.1016/j.dib.2026.112484>
+
 ## 2.1 Load Data
 
 ```{r}
