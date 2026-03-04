@@ -245,7 +245,7 @@ theme(
   panel.background = element_rect(fill = "grey95"),
   strip.background = element_rect(
     fill = "lightblue",
-    colour = "black"
+    colour = "grey95"
   )
 )
 ```

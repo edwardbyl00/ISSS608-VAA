@@ -37,12 +37,20 @@ website:
         - text: "Hands-on Exercise 5e"
           href: "Hands-on_EX/Hands-on_EX05/Hands-on_EX05e.html"
         - text: "Hands-on Exercise 7"
-          href: "Hands-on_EX/Hands-on_EX07/Hands-on_EX07a.html"  
+          href: "Hands-on_EX/Hands-on_EX07/Hands-on_EX07a.html"
+        - text: "Hands-on Exercise 8a"
+          href: "Hands-on_EX/Hands-on_EX08/Hands-on_EX08a.html"
+        - text: "Hands-on Exercise 8b"
+          href: "Hands-on_EX/Hands-on_EX08/Hands-on_EX08b.html"
+        - text: "Hands-on Exercise 8c"
+          href: "Hands-on_EX/Hands-on_EX08/Hands-on_EX08c.html" 
           
     - text: "Take-home Exercise"
       menu:
         - text: "Take-home Exercise 1"
           href: "Take-home_EX/Take-home_EX01/Take-home_EX01.html"
+        - text: "Take-home Exercise 2"
+          href: "Take-home_EX/Take-home_EX02/Take-home_EX02.html"
           
     right:
       -  href: index.qmd

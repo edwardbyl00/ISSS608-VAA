@@ -1,0 +1,406 @@
+---
+title: "Take-home_EX02"
+author: Edward
+format: html
+date: 4 Mar 2026
+date-modified: 4 Mar 2026
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# 1. Load Libraries
+
+The following packages are used:
+
++----------------------------------+------------------------------------------------------------------------------------+
+| Packages                         | Purpose                                                                            |
++==================================+====================================================================================+
+| tidyverse.                       | Used for data manipulation, transformation, and visualisation.                     |
++----------------------------------+------------------------------------------------------------------------------------+
+| cluster                          | Used for performing and evaluating cluster analysis.                               |
++----------------------------------+------------------------------------------------------------------------------------+
+| GGally                           | Used for advanced exploratory data visualisations and variable relationship plots. |
++----------------------------------+------------------------------------------------------------------------------------+
+| corrplot                         | Used for visualising correlation matrices.                                         |
++----------------------------------+------------------------------------------------------------------------------------+
+| patchwork                        | Used for arranging multiple plots into a single layout.                            |
++----------------------------------+------------------------------------------------------------------------------------+
+| knitr                            | Used for generating reproducible reports by integrating code, output, and text.    |
++----------------------------------+------------------------------------------------------------------------------------+
+
+```{r}
+pacman::p_load(tidyverse, cluster , GGally, corrplot, patchwork, knitr)
+```
+
+# 2. The Data
+
+## 2.1 Load Data
+
+```{r}
+customer <- read_csv('Data/customer_data.csv')
+transaction <- read_csv('Data/transactions_data.csv')
+
+skimr::skim(customer)
+```
+
+## 2.2 Data Prep
+
+### 2.2.1 Feature selection & Scaling
+
+-   The variables selected for K-means clustering were chosen to minimise redundancy by ensuring that no pair of variables exhibits a high correlation (greater than 0.8).
+
+-   These four variables were retained because they provide a balanced representation of key customer behaviours that are likely to differentiate customer segments.
+
+**Features selected:** monthly_transaction_count, avg_tx_value, active_products, customer_tenure
+
+```{r}
+#| code-fold: true
+features <- c("monthly_transaction_count",
+         "avg_tx_value",
+         "active_products",
+         "customer_tenure")
+
+fin.data <- customer %>%
+  select(all_of(features))
+
+scaled_features <- scale(fin.data)
+
+fin.cor <- cor(fin.data, use = "complete.obs")
+
+corrplot(
+  fin.cor,
+  method = "ellipse",
+  order = "AOE",
+  col = colorRampPalette(c("blue", "white", "red"))(200),
+  tl.col = "black"
+)
+```
+
+```         
+```
+
+# 3 The Model
+
+## 3.1 Feeding the model
+
+### 3.1.1 Running the Elbow Plot
+
+The elbow plot is run to allow use to narrow down to the number of cluster that potentially give us the better separation.
+
+```{r}
+#| code-fold: true
+# set up no. of max clusters to run
+n = 10
+# Create empty list
+wcss <- numeric(n)
+
+# Create loop and extract SSW into list
+set.seed(888)
+for (k in 1:n) {
+  km <- kmeans(scaled_features, centers = k, nstart = 10,
+                       iter.max = 200, algorithm = "Lloyd")
+  wcss[k] <- km$tot.withinss
+}
+
+plot(1:n, wcss, type = "b",
+     xlab = "Number of Clusters",
+     ylab = "Within Cluster SSE",
+     main = "Elbow Plot of K-Means Clustering")
+```
+
+### 3.1.2 Running the Kmeans model
+
+-   From the elbow plot the ideal number of clusters are set to be between 3-5.
+
+-   Although k = 5 produced a slightly higher silhouette score, the fifth cluster contained only 24 observations, indicating poor stability. Therefore **k = 4** was selected as it provides a **balance between cluster quality and interpretability**.
+
+-   To allow for better explainability, PCA is not applied in the model.
+
+-   We are using Lloyd algorithm as it is more stable for larger data-set.
+
+```{r}
+#| code-fold: true
+# Run k means based on n clusters
+kmeans_model <- kmeans(scaled_features, centers = 4, nstart = 10, iter.max = 200, algorithm = "Lloyd")
+
+# Assign labels back to original data
+customer$cluster <- factor(kmeans_model$cluster)
+
+# Assign cluster to count size to prevent shifting
+cluster_order <- customer %>%
+  count(cluster) %>%
+  arrange(desc(n)) %>%
+  mutate(new_cluster = row_number())
+
+customer <- customer %>%
+  left_join(cluster_order %>% select(cluster, new_cluster),
+            by = "cluster") %>%
+  mutate(cluster = factor(new_cluster)) %>%
+  select(-new_cluster)
+```
+
+# 4 Performance Evaluation
+
+**Overall Performance Summary:**
+
++--------------+--------------+--------------------+
+| K Clusters   | Silhouette   | Variance Explained |
++==============+==============+====================+
+| 3            | 0.3907       | 0.36               |
++--------------+--------------+--------------------+
+| 4            | 0.4272       | 0.49               |
++--------------+--------------+--------------------+
+| 5\*          | 0.4308       | 0.64               |
++--------------+--------------+--------------------+
+
+\*Cluster of 5 is not selected as the 5th cluster is only with 24 members which is too small.
+
+## 4.1 Silhouette
+
+Silhouette measures **how well each observation fits within its assigned cluster as compare to other clusters**.
+
+Silhouette value is between **-1 and 1**.
+
+• **Close to 1** → well separated\
+• **Around 0** → overlapping clusters\
+• **Negative** → likely misclassified
+
+```{r}
+#| code-fold: true
+sil <- silhouette(kmeans_model$cluster,
+                  dist(scaled_features))
+
+cat("Silouette:", mean(sil[,"sil_width"]))
+```
+
+## 4.2 Variance Explained
+
+-   The proportion of variance explained is computed as the **ratio of between-cluster sum of squares to total sum of squares**.
+
+-   Variance explained measures the proportion of **total variation in the dataset that is captured** by the clustering structure.
+
+-   The v**alue ranges from 0 to 1**, where higher values indicate greater separation between clusters.
+
+**Clusters Distributions**
+
+```{r}
+#| code-fold: true
+# Calculate number of observations in each cluster.
+cluster_size <- table(customer$cluster)
+cluster_size
+
+```
+
+```{r}
+#| code-fold: true
+# Calculate between-cluster Sum of Squares
+btwn_clus <- kmeans_model$betweenss
+
+# Calculate total Sum of Squares
+tss <- kmeans_model$totss
+
+# Proportion of total variance explained by clustering
+var_exp <- (kmeans_model$betweenss / kmeans_model$totss)
+
+cat(sprintf("Between-cluster SS: %.2f\n", btwn_clus))
+cat(sprintf("Total SE: %.2f\n", tss))
+cat(sprintf("Proportion of variance explained: %.2f\n", var_exp))
+```
+
+# 5 The Clusters
+
+## 5.1 Cluster size
+
+4 clusters were selected as:
+
+-   It is able to explain the variance as compared to 5 clusters
+
+-   The feature are more differentiated
+
+```{r}
+#| code-fold: true
+cluster_size <- customer %>%
+  count(cluster) %>%
+  mutate(pct = n / sum(n))
+
+p1 <- ggplot(cluster_size,
+       aes(x = cluster, y = n, fill = cluster)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Set2") +
+  geom_text(
+    aes(label = scales::percent(pct, accuracy = 0.1)),
+    vjust = -0.3
+  ) +
+  theme_minimal() +
+  labs(title = "Number of Customers by Cluster",
+       x = "Cluster",
+       y = "Customers")
+
+p1
+```
+
+## 5.2 Cluster Characteristics
+
+### 5.2.1 Parallel plot
+
+```{r}
+#| code-fold: true
+# Group of feature mean by clusters
+cluster_mean <- customer %>%
+  group_by(cluster) %>%
+  summarise(across(c(all_of(features)),
+                   mean))
+
+# Plot parallel plot
+p2 <- ggparcoord(cluster_mean,
+           columns = 2:ncol(cluster_mean),
+           groupColumn = "cluster",
+           scale = "uniminmax") +
+  geom_line(linewidth = 1.5) +
+  geom_point(size = 2) + 
+  labs(title = "Parallel plot by clusters mean") +
+  scale_color_brewer(palette = "Set2", guide = guide_legend(reverse = FALSE))+
+  theme_minimal()
+
+
+p2
+```
+
+### **5.2.2 Boxplot of Selected features**
+
+```{r, fig.width= 12}
+#| code-fold: true
+customer_piv <- customer %>%
+  select(cluster,
+         all_of(features)) %>%
+  pivot_longer(-cluster,
+               names_to = "feature",
+               values_to = "value")
+
+p3 <- ggplot(customer_piv,
+       aes(x = cluster,
+           y = value,
+           fill = cluster)) +
+  geom_boxplot() +
+  facet_wrap(~ feature,
+             scales = "free_y") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  labs(title = "Cluster Profiles Across Features",
+       x = "Cluster",
+       y = "Value")
+
+p3
+```
+
+### **5.2.3 Median by Cluster Group**
+
+```{r}
+#| code-fold: true
+cluster_median <- customer %>%
+  group_by(cluster) %>%
+  summarise(across(all_of(features), median))
+            
+cluster_median %>%
+  kable(caption = "Median Feature Values by Cluster")
+
+```
+
+### 5.2.4 Detailed Cluster Comparison
+
+The clusters can be differentiated by the characteristics below:
+
++-------------+----------------------------------------------------+----------------------------------------------------------------------+
+| Cluster     | Segment Type                                       | Characteristics                                                      |
++=============+====================================================+======================================================================+
+| 1           | Active Low Value and Long Term Customer            | -   Account for the largest pool of customers (54.4%)                |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Highest monthly transaction count (Median = 2)                   |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Customer with the highest tenure (Median = 11.7)                 |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Low number of active products (Median = 1)                       |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Lowest average transaction (Median = 1675191)                    |
++-------------+----------------------------------------------------+----------------------------------------------------------------------+
+| 2           | Multi-product Low Value and Long Term Customer     | -   Customer with the highest tenure (Median = 11.7)                 |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Very high monthly transaction count (Median = 2.09)              |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Very small average transaction amount (similar to cluster 1)     |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Hold the highest number of active products (Median = 4)          |
++-------------+----------------------------------------------------+----------------------------------------------------------------------+
+| 3           | New and Low Value Customer                         | -   Customer with lowest tenure (Median = 10.07)                     |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Lowest transaction count (Median = 1.67)                         |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Average transaction value is relatively low (Median = 1,725,881) |
++-------------+----------------------------------------------------+----------------------------------------------------------------------+
+| 4           | Premium Customer: Moderately Active and High Value | -   Customer nearing the highest tenure (Median = 11.63)             |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Very high monthly transaction count (Median = 2)                 |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Average transaction amount is the highest (Median = 13,719,926)  |
++-------------+----------------------------------------------------+----------------------------------------------------------------------+
+
+## 5.3 Clusters Summary
+
+The Key features for the cluster can be summarised by the Heatmap:
+
+```{r}
+#| code-fold: true
+# Normalise fetaure to scale of 0 to 1
+cluster_normalised <- cluster_median %>%
+  mutate(across(-cluster, ~ (. - min(.)) / (max(.) - min(.))))
+
+# Make tabular format
+cluster_long <- cluster_normalised %>%
+  pivot_longer(-cluster,
+               names_to = "feature",
+               values_to = "value")
+
+
+ggplot(cluster_long,
+       aes(x = feature,
+           y = cluster,
+           fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_gradientn(
+    colours = c("#e5f5f9", "#99d8c9", "#2ca25f")
+  )+
+  theme_minimal() +
+  labs(title = "Cluster Feature Heatmap",
+       x = "Customer Behaviour Features",
+       y = "Cluster",
+       fill = "Relative Intensity")
+```
+
+The 4 clusters are summarized as below:
+
+-   **Cluster 1**: Active Low Value and Long Term Customer
+
+-   **Cluster 2**: Multi-product Low Value and Long Term Customer
+
+-   **Cluster 3**: New and Low Value Customer
+
+-   **Cluster 4**: Premium Customer: Moderately Active and High Value
+
+## References:
+
+*Kam, Tin Seong. (2025).6  Visual Correlation Analysis – R for Visual Analytics*. (2023, December 4). Netlify.app. <https://r4va.netlify.app/chap06‌>
+
+*Kam, Tin Seong. (2025).15  Visual Multivariate Analysis with Parallel Coordinates Plot – R for Visual Analytics*. (2023, December 4). Netlify.app. <https://r4va.netlify.app/chap15>
+
+*Kam, Tin Seong. (2025).16  Treemap Visualisation with R – R for Visual Analytics*. (2023, December 4). Netlify.app. <https://r4va.netlify.app/chap16>
+
+‌*Heat map in ggplot2*. (2021, November 2). R CHARTS \| a Collection of Charts and Graphs Made with the R Programming Language. <https://r-charts.com/correlation/heat-map-ggplot2/>
+
+‌
+
+‌
