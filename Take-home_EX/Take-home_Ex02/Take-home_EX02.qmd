@@ -3,7 +3,7 @@ title: "Take-home_EX02"
 author: Edward
 format: html
 date: 4 Mar 2026
-date-modified: 4 Mar 2026
+date-modified: 11 Mar 2026
 ---
 
 ```{r setup, include=FALSE}
@@ -17,17 +17,27 @@ knitr::opts_chunk$set(
 
 The following packages are used:
 
-| Packages | Purpose |
-|----|----|
-| tidyverse. | Used for data manipulation, transformation, and visualisation. |
-| cluster | Used for performing and evaluating cluster analysis. |
-| GGally | Used for advanced exploratory data visualisations and variable relationship plots. |
-| corrplot | Used for visualising correlation matrices. |
-| patchwork | Used for arranging multiple plots into a single layout. |
-| knitr | Used for generating reproducible reports by integrating code, output, and text. |
++-------------+------------------------------------------------------------------------------------+
+| Packages    | Purpose                                                                            |
++=============+====================================================================================+
+| tidyverse.  | Used for data manipulation, transformation, and visualisation.                     |
++-------------+------------------------------------------------------------------------------------+
+| cluster     | Used for performing and evaluating cluster analysis.                               |
++-------------+------------------------------------------------------------------------------------+
+| GGally      | Used for advanced exploratory data visualisations and variable relationship plots. |
++-------------+------------------------------------------------------------------------------------+
+| corrplot    | Used for visualising correlation matrices.                                         |
++-------------+------------------------------------------------------------------------------------+
+| patchwork   | Used for arranging multiple plots into a single layout.                            |
++-------------+------------------------------------------------------------------------------------+
+| knitr       | Used for generating reproducible reports by integrating code, output, and text.    |
++-------------+------------------------------------------------------------------------------------+
+| Skimr       | To allow us to get a quite understanding on data.                                  |
++-------------+------------------------------------------------------------------------------------+
 
 ```{r}
-pacman::p_load(tidyverse, cluster , GGally, corrplot, patchwork, knitr)
+pacman::p_load(tidyverse, cluster , GGally, corrplot, patchwork, 
+               knitr, skimr)
 ```
 
 # 2. The Data
@@ -44,7 +54,7 @@ The data set contains 2 files and only the **customer_data.csv** is used.
 
 ```{r}
 customer <- read_csv('Data/customer_data.csv')
-skimr::skim(customer)
+skim(customer)
 ```
 
 ## 2.2 Data Prep
@@ -55,7 +65,15 @@ skimr::skim(customer)
 
 -   These four variables were retained because they provide a balanced representation of key customer behaviours that are likely to differentiate customer segments.
 
-**Features selected:** monthly_transaction_count, avg_tx_value, active_products, customer_tenure
+**Features selected:**
+
+-   **transaction intensity**: monthly_transaction_count
+
+-   **monetary value**: avg_tx_value
+
+-   **product breadth**: active_products
+
+-   **relationship maturity**: customer_tenure
 
 ```{r}
 #| code-fold: true
@@ -76,11 +94,10 @@ corrplot(
   method = "ellipse",
   order = "AOE",
   col = colorRampPalette(c("blue", "white", "red"))(200),
-  tl.col = "black"
-)
-```
-
-```         
+  tl.col = "black",
+  title = "Correlation Matrix of Selected Clustering Features",
+  mar = c(0, 0, 2, 0)
+  )
 ```
 
 # 3 The Model
@@ -118,14 +135,16 @@ plot(1:n, wcss, type = "b",
 
 -   Although k = 5 produced a slightly higher silhouette score, the fifth cluster contained only 24 observations, indicating poor stability. Therefore **k = 4** was selected as it provides a **balance between cluster quality and interpretability**.
 
--   To allow for better explainability, PCA is not applied in the model.
+-   PCA was not used in model construction in order to preserve direct interpretability of the original features. This was only applied separately as a visualisation tool to project the clustered customers into two dimensions below.
 
 -   We are using Lloyd algorithm as it is more stable for larger data-set.
 
 ```{r}
 #| code-fold: true
 # Run k means based on n clusters
-kmeans_model <- kmeans(scaled_features, centers = 4, nstart = 10, iter.max = 200, algorithm = "Lloyd")
+cluster_n = 4
+kmeans_model <- kmeans(scaled_features, centers = cluster_n, nstart = 25, 
+                       iter.max = 200, algorithm = "Lloyd")
 
 # Assign labels back to original data
 customer$cluster <- factor(kmeans_model$cluster)
@@ -143,15 +162,23 @@ customer <- customer %>%
   select(-new_cluster)
 ```
 
+```{r}
+readr::write_csv(customer, "product_summary.csv")
+```
+
 # 4 Performance Evaluation
 
 **Overall Performance Summary:**
 
-| K Clusters | Silhouette | Variance Explained |
-|------------|------------|--------------------|
-| 3          | 0.3907     | 0.36               |
-| 4          | 0.4272     | 0.49               |
-| 5\*        | 0.4308     | 0.64               |
++--------------+--------------+--------------------+
+| K Clusters   | Silhouette   | Variance Explained |
++==============+==============+====================+
+| 3            | 0.3907       | 0.36               |
++--------------+--------------+--------------------+
+| 4            | 0.4272       | 0.49               |
++--------------+--------------+--------------------+
+| 5\*          | 0.4308       | 0.64               |
++--------------+--------------+--------------------+
 
 \*Cluster of 5 is not selected as the 5th cluster is only with 24 members which is too small.
 
@@ -239,6 +266,37 @@ p1 <- ggplot(cluster_size,
 p1
 ```
 
+PCA was used as a visualisation tool to project the clustered customers into two dimensions to better visualise the separation and overlap between clusters.
+
+*(Note that PCA was not used to build the clustering model, it provides a useful visual summary of the segmentation structure.)*
+
+```{r}
+#| code-fold: true
+cluster_data <- customer %>%
+  select(all_of(features))
+
+# scale data
+cluster_scaled <- scale(cluster_data)
+
+# run PCA (Only for visualisation)
+pca_res <- prcomp(cluster_scaled)
+
+# Plot prep
+pca_df <- as.data.frame(pca_res$x[, 1:2])
+pca_df$cluster <- customer$cluster
+
+# ploting the cluster
+ggplot(pca_df, aes(x = PC1, y = PC2, color = cluster)) +
+  geom_point(alpha = 0.6) +
+  theme_minimal() +
+  labs(
+    title = "Customer Clusters Visualisation",
+    x = "PC1",
+    y = "PC2",
+    color = "Cluster"
+  )
+```
+
 ## 5.2 Cluster Characteristics
 
 ### 5.2.1 Parallel plot
@@ -310,39 +368,39 @@ cluster_median %>%
 
 The clusters can be differentiated by the characteristics below:
 
-+---------+----------------------------------------------------+----------------------------------------------------------------------+
-| Cluster | Segment Type                                       | Characteristics                                                      |
-+=========+====================================================+======================================================================+
-| 1       | Active Low Value and Long Term Customer            | -   Account for the largest pool of customers (54.4%)                |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Highest monthly transaction count (Median = 2)                   |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Customer with the highest tenure (Median = 11.7)                 |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Low number of active products (Median = 1)                       |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Lowest average transaction (Median = 1675191)                    |
-+---------+----------------------------------------------------+----------------------------------------------------------------------+
-| 2       | Multi-product Low Value and Long Term Customer     | -   Customer with the highest tenure (Median = 11.7)                 |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Very high monthly transaction count (Median = 2.09)              |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Very small average transaction amount (similar to cluster 1)     |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Hold the highest number of active products (Median = 4)          |
-+---------+----------------------------------------------------+----------------------------------------------------------------------+
-| 3       | New and Low Value Customer                         | -   Customer with lowest tenure (Median = 10.07)                     |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Lowest transaction count (Median = 1.67)                         |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Average transaction value is relatively low (Median = 1,725,881) |
-+---------+----------------------------------------------------+----------------------------------------------------------------------+
-| 4       | Premium Customer: Moderately Active and High Value | -   Customer nearing the highest tenure (Median = 11.63)             |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Very high monthly transaction count (Median = 2)                 |
-|         |                                                    |                                                                      |
-|         |                                                    | -   Average transaction amount is the highest (Median = 13,719,926)  |
-+---------+----------------------------------------------------+----------------------------------------------------------------------+
++-------------+----------------------------------------------------+----------------------------------------------------------------------+
+| Cluster     | Segment Type                                       | Characteristics                                                      |
++=============+====================================================+======================================================================+
+| 1           | Active Low Value and Long Term Customer            | -   Account for the largest pool of customers (54.4%)                |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Highest monthly transaction count (Median = 2)                   |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Customer with the highest tenure (Median = 11.7)                 |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Low number of active products (Median = 1)                       |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Lowest average transaction (Median = 1675191)                    |
++-------------+----------------------------------------------------+----------------------------------------------------------------------+
+| 2           | Multi-product Low Value and Long Term Customer     | -   Customer with the highest tenure (Median = 11.7)                 |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Very high monthly transaction count (Median = 2.09)              |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Very small average transaction amount (similar to cluster 1)     |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Hold the highest number of active products (Median = 4)          |
++-------------+----------------------------------------------------+----------------------------------------------------------------------+
+| 3           | New and Low Value Customer                         | -   Customer with lowest tenure (Median = 10.07)                     |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Lowest transaction count (Median = 1.67)                         |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Average transaction value is relatively low (Median = 1,725,881) |
++-------------+----------------------------------------------------+----------------------------------------------------------------------+
+| 4           | Premium Customer: Moderately Active and High Value | -   Customer nearing the highest tenure (Median = 11.63)             |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Very high monthly transaction count (Median = 2)                 |
+|             |                                                    |                                                                      |
+|             |                                                    | -   Average transaction amount is the highest (Median = 13,719,926)  |
++-------------+----------------------------------------------------+----------------------------------------------------------------------+
 
 ## 5.3 Clusters Summary
 
@@ -386,7 +444,191 @@ The 4 clusters are summarized as below:
 
 -   **Cluster 4**: Premium Customer: Moderately Active and High Value
 
-## References:
+## 6 Deep Dive into Clusters
+
+This section provides a deeper cluster-level interpretation by comparing variables not used in the clustering model. The aim is to assess whether the identified customer segments also exhibit meaningful differences in retention risk, product ownership patterns, satisfaction, and app usage behaviour.
+
+```{r}
+#| code-fold: true
+customer %>%
+  group_by(cluster) %>%
+  summarise(
+    mean_churn = mean(churn_probability, na.rm = TRUE),
+    mean_satisfaction = mean(satisfaction_score, na.rm = TRUE),
+    mean_logins = mean(app_logins_frequency, na.rm = TRUE),
+    failed_rate = mean(failed_transactions > 0, na.rm = TRUE)
+  )
+```
+
+### 6.1 Cluster vs Churn Probability
+
+**Cluster 2** give the lowest churn probability, while Clusters 1, 3, and 4 show higher and similar churn risk. This suggests that churn probability is one of the more informative variables for distinguishing the customer segments.
+
+```{r}
+#| code-fold: true
+ggplot(customer, aes(x = cluster, y = churn_probability, fill = cluster)) +
+  geom_violin(alpha = 0.4, trim = FALSE) +
+  geom_boxplot(width = 0.15, outlier.shape = NA, alpha = 0.5) +
+  theme_minimal() +
+  labs(
+    title = "Churn Probability by Cluster",
+    x = "Cluster",
+    y = "Churn Probability",
+    fill = "Cluster"
+  )
+```
+
+### 6.2 Cluster vs Product Ownership
+
+Product ownership rate was used instead of raw count to account for differences in cluster size. This allows a fairer comparison of how common each product is within each customer segment.
+
+Based on the observation, the product ownership are rather evenly distributed across the clusters.
+
+**Products in scope:**
+
+-   savings_account
+
+-   credit_card
+
+-   personal_loan
+
+-   investment_account
+
+-   insurance_product
+
+```{r, fig.height=15}
+#| code-fold: true
+# Creating tabular format for banking product
+product_df <- customer %>%
+  select(cluster, savings_account, credit_card, personal_loan,
+         investment_account, insurance_product) %>%
+  pivot_longer(cols = -cluster,
+    names_to = "product",
+    values_to = "Products_owned"
+  )
+
+# Calculate product ownership rate within each cluster
+product_summary <- product_df %>%
+  group_by(cluster, product) %>%
+  summarise(ownership_rate = mean(Products_owned, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+product_summary <- product_summary %>%
+  mutate(product = recode(product,
+    savings_account = "Savings Account",
+    credit_card = "Credit Card",
+    personal_loan = "Personal Loan",
+    investment_account = "Investment Account",
+    insurance_product = "Insurance"
+  ))
+
+p4 <- ggplot(product_summary, aes(x = product, y = ownership_rate, fill = product)) +
+  geom_col() + 
+  geom_text(aes(label = scales::percent(ownership_rate, accuracy = 1)),
+            vjust = -0.3, size = 3) +
+  facet_wrap(~ cluster) +
+  theme_minimal() +
+  labs(
+    title = "Product Ownership Rate by Cluster",
+    x = "Product",
+    y = "Ownership Rate") +
+  scale_y_continuous(labels = scales::percent) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")+
+  scale_fill_brewer(palette = "Set2")
+
+p5 <- ggplot(product_summary, aes(x = product, y = cluster, fill = ownership_rate))+
+  geom_tile(color = "white") +
+  geom_text(aes(label = scales::percent(ownership_rate, accuracy = 1)), size = 3) +
+  scale_fill_gradient(low = "grey90", high = "steelblue") +
+  theme_minimal() +
+  labs(
+    title = "Product Ownership Rate by Cluster",
+    x = "Product",
+    y = "Cluster",
+    fill = "Ownership Rate"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p4/p5
+
+```
+
+### 6.3 Satisfaction Score by Cluster
+
+The satisfaction scores are highly similar across all clusters, indicating that satisfaction is not a particularly useful variable for distinguishing or interpreting these customer segments.
+
+```{r}
+#| code-fold: true
+# create average satisfaction
+mean_df <- customer %>%
+  group_by(cluster) %>%
+  summarise(avg_satisfaction = mean(satisfaction_score, na.rm = TRUE))
+
+
+ggplot(customer, aes(x = cluster, y = satisfaction_score, fill = cluster)) +
+  geom_violin(alpha = 0.5, trim = FALSE) +
+  geom_point(data = mean_df,
+    aes(x = cluster, y = avg_satisfaction),
+    color = "blue",
+    size = 3,
+    inherit.aes = FALSE) +
+  
+  geom_text(data = mean_df,
+  aes(x = cluster, y = avg_satisfaction,
+      label = paste0("Mean = ", round(avg_satisfaction, 2))),
+  color = "blue",
+  vjust = -1,
+  size = 3,
+  inherit.aes = FALSE) +
+  
+  theme_minimal() +
+  
+  labs(
+    title = "Distribution of Satisfaction Score by Cluster",
+    x = "Cluster",
+    y = "Satisfaction Score"
+  ) +
+  
+  scale_fill_brewer(palette = "Set2") +
+  theme(legend.position = "none")
+```
+
+### 6.4 App Login by Cluster
+
+App login frequency is highly similar across all clusters, suggesting that it is not a particularly useful variable for differentiating or interpreting these customer segments.
+
+```{r}
+ggplot(customer, aes(x = cluster, y = app_logins_frequency, fill = cluster)) +
+  geom_boxplot(alpha = 0.7) +
+  theme_minimal() +
+  labs(
+    title = "App Login Frequency by Cluster",
+    x = "Cluster",
+    y = "App Login Frequency"
+  ) +
+  scale_fill_brewer(palette = "Set2") +
+  theme(legend.position = "none")
+```
+
+### 6.5 Deep Dive Summary
+
+```{r}
+customer %>%
+  group_by(cluster) %>%
+  summarise(
+    mean_churn = mean(churn_probability, na.rm = TRUE),
+    median_satisfaction = median(satisfaction_score, na.rm = TRUE),
+    median_logins = median(app_logins_frequency, na.rm = TRUE)
+  )
+```
+
+## 7 Storyboard for Shiny App module:
+
+![](images/Story%20Board-3-01.jpg)
+
+## 8 References and Inspiration:
 
 *Kam, Tin Seong. (2025).6  Visual Correlation Analysis – R for Visual Analytics*. (2023, December 4). Netlify.app. <https://r4va.netlify.app/chap06‌>
 
@@ -397,6 +639,10 @@ The 4 clusters are summarized as below:
 ‌*Heat map in ggplot2*. (2021, November 2). R CHARTS \| a Collection of Charts and Graphs Made with the R Programming Language. <https://r-charts.com/correlation/heat-map-ggplot2/>
 
 Muñoz-Guerrero, L. E., Ceballos, Y. F., & Trejos-Rojas, L. D. (2026). A comprehensive dataset of customer behavior in Latin American Fintech: 12-month transactional and demographic data for churn analysis. *Data in Brief*, *65*, 112484. <https://doi.org/10.1016/j.dib.2026.112484>
+
+GeeksforGeeks. (2021, October 13). *How To Make Violin Plots with ggplot2 in R?* GeeksforGeeks. <https://www.geeksforgeeks.org/r-language/how-to-make-violin-plots-with-ggplot2-in-r/>
+
+‌
 
 ‌
 
