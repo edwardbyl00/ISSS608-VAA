@@ -3,7 +3,7 @@ title: "Take-home_EX02"
 author: Edward
 format: html
 date: 4 Mar 2026
-date-modified: 11 Mar 2026
+date-modified: 14 Mar 2026
 ---
 
 ```{r setup, include=FALSE}
@@ -52,6 +52,14 @@ The data set contains 2 files and only the **customer_data.csv** is used.
 
 ## 2.1 Load Data
 
+The data is first loaded to perform the following checks:
+
+-   **Missing Values**: Noted for credit_utilization missing 18k but not dropped since this analysis does not require that.
+
+-   **Data Type** are set correctly
+
+-   **Skewness of data and data distribution**
+
 ```{r}
 customer <- read_csv('Data/customer_data.csv')
 skim(customer)
@@ -64,6 +72,8 @@ skim(customer)
 -   The variables selected for K-means clustering were chosen to minimise redundancy by ensuring that no pair of variables exhibits a high correlation (greater than 0.8).
 
 -   These four variables were retained because they provide a balanced representation of key customer behaviours that are likely to differentiate customer segments.
+
+-   The features are then scales to prevent the bigger numbers to dominate the clustering.
 
 **Features selected:**
 
@@ -111,19 +121,20 @@ The elbow plot is run to allow use to narrow down to the number of cluster that 
 ```{r}
 #| code-fold: true
 # set up no. of max clusters to run
-n = 10
+n = 4
+n_perf = 10
 # Create empty list
 wcss <- numeric(n)
 
 # Create loop and extract SSW into list
 set.seed(888)
-for (k in 1:n) {
+for (k in 1:n_perf) {
   km <- kmeans(scaled_features, centers = k, nstart = 10,
                        iter.max = 200, algorithm = "Lloyd")
   wcss[k] <- km$tot.withinss
 }
 
-plot(1:n, wcss, type = "b",
+plot(1:n_perf, wcss, type = "b",
      xlab = "Number of Clusters",
      ylab = "Within Cluster SSE",
      main = "Elbow Plot of K-Means Clustering")
@@ -142,8 +153,9 @@ plot(1:n, wcss, type = "b",
 ```{r}
 #| code-fold: true
 # Run k means based on n clusters
-cluster_n = 4
-kmeans_model <- kmeans(scaled_features, centers = cluster_n, nstart = 25, 
+
+# Run k means based on n clusters
+kmeans_model <- kmeans(scaled_features, centers = n, nstart = 25, 
                        iter.max = 200, algorithm = "Lloyd")
 
 # Assign labels back to original data
@@ -160,10 +172,6 @@ customer <- customer %>%
             by = "cluster") %>%
   mutate(cluster = factor(new_cluster)) %>%
   select(-new_cluster)
-```
-
-```{r}
-readr::write_csv(customer, "product_summary.csv")
 ```
 
 # 4 Performance Evaluation
@@ -200,6 +208,36 @@ sil <- silhouette(kmeans_model$cluster,
 cat("Silouette:", mean(sil[,"sil_width"]))
 ```
 
+```{r}
+#| code-fold: true
+dist_mat <- dist(scaled_features)
+
+sil_summary <- map_dfr(2:n_perf, function(k) {
+  set.seed(888)
+  km <- kmeans(scaled_features, centers = k, nstart = 10)
+  
+  sil <- silhouette(km$cluster, dist_mat)
+  
+  tibble(
+    k = k,
+    avg_silhouette = mean(sil[, 3])
+  )
+})
+
+ggplot(sil_summary, aes(x = k, y = avg_silhouette)) +
+  geom_line() +
+  geom_point(size = 2) +
+  geom_text(aes(label = round(avg_silhouette, 3)),
+            vjust = -0.6, size = 3) +
+  scale_x_continuous(breaks = 2:n) +
+  theme_minimal() +
+  labs(
+    title = "Average Silhouette Score by Number of Clusters",
+    x = "Number of Clusters (k)",
+    y = "Average Silhouette Score"
+  )
+```
+
 ## 4.2 Variance Explained
 
 -   The proportion of variance explained is computed as the **ratio of between-cluster sum of squares to total sum of squares**.
@@ -232,6 +270,35 @@ var_exp <- (kmeans_model$betweenss / kmeans_model$totss)
 cat(sprintf("Between-cluster SS: %.2f\n", btwn_clus))
 cat(sprintf("Total SE: %.2f\n", tss))
 cat(sprintf("Proportion of variance explained: %.2f\n", var_exp))
+```
+
+```{r}
+#| code-fold: true
+var_summary <- map_dfr(2:n_perf, function(k) {
+  set.seed(123)
+  km <- kmeans(scaled_features, centers = k, nstart = 25,
+               iter.max = 200, algorithm = "Lloyd")
+  
+  tibble(
+    k = k,
+    var_explained = km$betweenss / km$totss
+  )
+})
+
+ggplot(var_summary, aes(x = k, y = var_explained)) +
+  geom_line() +
+  geom_point(size = 2) +
+  geom_text(aes(label = scales::percent(var_explained, accuracy = 0.1)),
+            vjust = -0.5, size = 3) +
+  scale_x_continuous(breaks = 2:n_perf) +
+  scale_y_continuous(labels = scales::percent,
+                     expand = expansion(mult = c(0, 0.1))) +
+  theme_minimal() +
+  labs(
+    title = "Proportion of Variance Explained by Number of Clusters",
+    x = "Number of Clusters (k)",
+    y = "Variance Explained"
+  )
 ```
 
 # 5 The Clusters
@@ -624,11 +691,15 @@ customer %>%
   )
 ```
 
-## 7 Storyboard for Shiny App module:
+## 7 Storyboard for Shiny App module
 
-![](images/Story%20Board-3-01.jpg)
+![](images/clipboard-555907717.png)
 
-## 8 References and Inspiration:
+![](images/clipboard-3708323425.png)
+
+![](images/clipboard-3691780280.png)
+
+## 8 References and Inspiration
 
 *Kam, Tin Seong. (2025).6  Visual Correlation Analysis – R for Visual Analytics*. (2023, December 4). Netlify.app. <https://r4va.netlify.app/chap06‌>
 
