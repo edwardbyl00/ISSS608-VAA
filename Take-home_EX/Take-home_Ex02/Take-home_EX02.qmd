@@ -17,23 +17,15 @@ knitr::opts_chunk$set(
 
 The following packages are used:
 
-+-------------+------------------------------------------------------------------------------------+
-| Packages    | Purpose                                                                            |
-+=============+====================================================================================+
-| tidyverse.  | Used for data manipulation, transformation, and visualisation.                     |
-+-------------+------------------------------------------------------------------------------------+
-| cluster     | Used for performing and evaluating cluster analysis.                               |
-+-------------+------------------------------------------------------------------------------------+
-| GGally      | Used for advanced exploratory data visualisations and variable relationship plots. |
-+-------------+------------------------------------------------------------------------------------+
-| corrplot    | Used for visualising correlation matrices.                                         |
-+-------------+------------------------------------------------------------------------------------+
-| patchwork   | Used for arranging multiple plots into a single layout.                            |
-+-------------+------------------------------------------------------------------------------------+
-| knitr       | Used for generating reproducible reports by integrating code, output, and text.    |
-+-------------+------------------------------------------------------------------------------------+
-| Skimr       | To allow us to get a quite understanding on data.                                  |
-+-------------+------------------------------------------------------------------------------------+
+| Packages | Purpose |
+|----|----|
+| tidyverse. | Used for data manipulation, transformation, and visualisation. |
+| cluster | Used for performing and evaluating cluster analysis. |
+| GGally | Used for advanced exploratory data visualisations and variable relationship plots. |
+| corrplot | Used for visualising correlation matrices. |
+| patchwork | Used for arranging multiple plots into a single layout. |
+| knitr | Used for generating reproducible reports by integrating code, output, and text. |
+| Skimr | To allow us to get a quite understanding on data. |
 
 ```{r}
 pacman::p_load(tidyverse, cluster , GGally, corrplot, patchwork, 
@@ -178,15 +170,11 @@ customer <- customer %>%
 
 **Overall Performance Summary:**
 
-+--------------+--------------+--------------------+
-| K Clusters   | Silhouette   | Variance Explained |
-+==============+==============+====================+
-| 3            | 0.3907       | 0.36               |
-+--------------+--------------+--------------------+
-| 4            | 0.4272       | 0.49               |
-+--------------+--------------+--------------------+
-| 5\*          | 0.4308       | 0.64               |
-+--------------+--------------+--------------------+
+| K Clusters | Silhouette | Variance Explained |
+|------------|------------|--------------------|
+| 3          | 0.3907     | 0.36               |
+| 4          | 0.4272     | 0.49               |
+| 5\*        | 0.4308     | 0.64               |
 
 \*Cluster of 5 is not selected as the 5th cluster is only with 24 members which is too small.
 
@@ -435,39 +423,39 @@ cluster_median %>%
 
 The clusters can be differentiated by the characteristics below:
 
-+-------------+----------------------------------------------------+----------------------------------------------------------------------+
-| Cluster     | Segment Type                                       | Characteristics                                                      |
-+=============+====================================================+======================================================================+
-| 1           | Active Low Value and Long Term Customer            | -   Account for the largest pool of customers (54.4%)                |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Highest monthly transaction count (Median = 2)                   |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Customer with the highest tenure (Median = 11.7)                 |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Low number of active products (Median = 1)                       |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Lowest average transaction (Median = 1675191)                    |
-+-------------+----------------------------------------------------+----------------------------------------------------------------------+
-| 2           | Multi-product Low Value and Long Term Customer     | -   Customer with the highest tenure (Median = 11.7)                 |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Very high monthly transaction count (Median = 2.09)              |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Very small average transaction amount (similar to cluster 1)     |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Hold the highest number of active products (Median = 4)          |
-+-------------+----------------------------------------------------+----------------------------------------------------------------------+
-| 3           | New and Low Value Customer                         | -   Customer with lowest tenure (Median = 10.07)                     |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Lowest transaction count (Median = 1.67)                         |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Average transaction value is relatively low (Median = 1,725,881) |
-+-------------+----------------------------------------------------+----------------------------------------------------------------------+
-| 4           | Premium Customer: Moderately Active and High Value | -   Customer nearing the highest tenure (Median = 11.63)             |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Very high monthly transaction count (Median = 2)                 |
-|             |                                                    |                                                                      |
-|             |                                                    | -   Average transaction amount is the highest (Median = 13,719,926)  |
-+-------------+----------------------------------------------------+----------------------------------------------------------------------+
++---------+----------------------------------------------------+----------------------------------------------------------------------+
+| Cluster | Segment Type                                       | Characteristics                                                      |
++=========+====================================================+======================================================================+
+| 1       | Active Low Value and Long Term Customer            | -   Account for the largest pool of customers (54.4%)                |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Highest monthly transaction count (Median = 2)                   |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Customer with the highest tenure (Median = 11.7)                 |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Low number of active products (Median = 1)                       |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Lowest average transaction (Median = 1675191)                    |
++---------+----------------------------------------------------+----------------------------------------------------------------------+
+| 2       | Multi-product Low Value and Long Term Customer     | -   Customer with the highest tenure (Median = 11.7)                 |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Very high monthly transaction count (Median = 2.09)              |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Very small average transaction amount (similar to cluster 1)     |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Hold the highest number of active products (Median = 4)          |
++---------+----------------------------------------------------+----------------------------------------------------------------------+
+| 3       | New and Low Value Customer                         | -   Customer with lowest tenure (Median = 10.07)                     |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Lowest transaction count (Median = 1.67)                         |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Average transaction value is relatively low (Median = 1,725,881) |
++---------+----------------------------------------------------+----------------------------------------------------------------------+
+| 4       | Premium Customer: Moderately Active and High Value | -   Customer nearing the highest tenure (Median = 11.63)             |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Very high monthly transaction count (Median = 2)                 |
+|         |                                                    |                                                                      |
+|         |                                                    | -   Average transaction amount is the highest (Median = 13,719,926)  |
++---------+----------------------------------------------------+----------------------------------------------------------------------+
 
 ## 5.3 Clusters Summary
 
